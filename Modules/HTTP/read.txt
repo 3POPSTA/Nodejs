@@ -1,0 +1,185 @@
+const http = require("http");
+
+const fs = require("fs");
+
+const path = require("path");
+
+
+
+const server = http.createServer((request,response)=>{
+
+    const filePath = path.join(__dirname,request.url);
+
+
+
+    fs.access(filePath,fs.constants.F_OK,(error)=>{
+
+        if(error){
+
+            response.statusCode = 404;
+
+            response.end("File not found");
+
+            return;
+
+        }
+
+    })
+
+
+
+    fs.stat(filePath,(error,stats)=>{
+
+        if(error){
+
+            response.statusCode = 500;
+
+            response.end("Server error");
+
+            return;
+
+        }
+
+
+
+        response.setHeader('Content-Length', stats.size);
+
+        response.setHeader('Content-Type', 'application/octet-stream');
+
+
+
+        const stream = fs.createReadStream(filePath);
+
+
+
+        stream.on("error", (error)=> {
+
+            console.log("Error reading file: ",error);
+
+            if(!response.headersSent){
+
+                response.statusCode = 500;
+
+                response.end('Error reading file');
+
+            }
+
+        });
+
+        stream.pipe(response);
+
+    });
+
+});
+
+const PORT = 3000;
+
+server.listen(PORT, () => {
+
+    console.log(`File server running at http://localhost:${PORT}/`);
+
+});
+
+This code has critical security vulnerabilities and logic bugs that will cause crashes.
+
+1. Severe Security Risk: Path Traversal
+path.join(__dirname, request.url) allows anyone to look at files outside your project folder. If a user requests a URL like http://localhost:3000/../../etc/passwd, your server will read and expose sensitive system files. You must verify that the requested path stays inside your project directory.
+
+2. Race Condition and Multiple Responses
+fs.access and fs.stat run at the same time independently. fs.access does not block fs.stat from running. If a file is missing, fs.access sends a 404 response, but fs.stat immediately runs right after it, fails, and tries to send a 500 response. This crashes your app because Node.js does not allow you to send headers or responses twice for a single request. You only need fs.stat (or fs.lstat) to check for existence and file details at the same time.
+
+3. Missing Directory Check
+If a user requests a folder path instead of a file, fs.stat treats the folder as valid. Trying to stream a directory causes a server error. You must check that the path is actually a file using stats.isFile().
+
+Corrected Code
+This fixed version prevents path traversal, removes the redundant check, handles missing files and directories cleanly, and stops server crashes:
+
+JavaScript
+const http = require("http");
+const fs = require("fs");
+const path = require("path");
+
+const server = http.createServer((request, response) => {
+    // Prevent path traversal by resolving the absolute path and checking boundaries
+    const filePath = path.resolve(__dirname, "." + request.url);
+
+    if (!filePath.startsWith(__dirname)) {
+        response.statusCode = 403;
+        response.end("Access denied");
+        return;
+    }
+
+    fs.stat(filePath, (error, stats) => {
+        // If the file does not exist, or if it is a folder instead of a file, return 404
+        if (error || !stats.isFile()) {
+            response.statusCode = 404;
+            response.end("File not found");
+            return;
+        }
+
+        response.setHeader('Content-Length', stats.size);
+        response.setHeader('Content-Type', 'application/octet-stream');
+
+        const stream = fs.createReadStream(filePath);
+
+        stream.on("error", (error) => {
+            console.log("Error reading file: ", error);
+            if (!response.headersSent) {
+                response.statusCode = 500;
+                response.end('Error reading file');
+            }
+        });
+
+        stream.pipe(response);
+    });
+});
+
+const PORT = 3000;
+server.listen(PORT, () => {
+    console.log(`File server running at http://localhost:${PORT}/`);
+});
+how do i test it
+
+To test your file server and verify that it works safely, follow these steps:
+
+1
+Create a test file
+1 min
+Create a new text file named test.txt inside your project folder and type a simple message inside it, like "Hello World!".
+
+How to verify: Check that test.txt is sitting directly in the same folder where your server script is saved.
+
+2
+Start the server
+1 min
+Open your terminal in your project folder and run your script using Node.js:
+
+Bash
+node your-script-name.js
+How to verify: Your terminal should print: File server running at http://localhost:3000/
+
+3
+Test a valid file request
+1 min
+Open your web browser or a tool like Postman, and go to:
+http://localhost:3000/test.txt
+
+How to verify: Your browser should display the text "Hello World!" and download or show the file contents correctly without crashing the server terminal.
+
+4
+Test error handling (404 Not Found)
+1 min
+Go to a file that does not exist in your folder:
+http://localhost:3000/fakefile.txt
+
+How to verify: The browser should show a 404 File not found message, and your terminal should keep running normally.
+
+5
+Test security (Path Traversal Protection)
+1 min
+Try to look at a system file outside your folder by going to:
+http://localhost:3000/../../etc/passwd
+
+How to verify: The browser should show a 403 Access denied message instead of leaking system data.
+
+Gemini is AI and can make mistakes.
