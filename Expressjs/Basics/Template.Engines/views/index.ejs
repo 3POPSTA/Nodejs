@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title><%= title %></title>
+</head>
+<body>
+  <h1><%= title %></h1>
+  <p><%= message %></p>
+
+  <h2>Items:</h2>
+  <ul>
+    <% items.forEach(function(item) { %>
+      <li><%= item %></li>
+    <% }); %>
+  </ul>
+</body>
+</html>
