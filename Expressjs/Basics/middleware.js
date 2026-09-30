@@ -16,7 +16,7 @@ app.use(express.static("public"));
 // POST route that uses JSON middleware
 app.post("/api/users",(request,response)=>{
     console.log(request.body);
-    res.status(201).json({ message: 'User created', user: request.body });
+    response.status(201).json({ message: 'User created', user: request.body });
 });
 
 app.listen(port, () => {
