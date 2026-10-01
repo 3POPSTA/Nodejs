@@ -62,3 +62,20 @@ Ensure code reliability by writing unit and integration tests using modern testi
 ***
 
 I have created a modern, updated guide for Express.js in the document editor, stripping out legacy generator boilerplate and emphasizing current production standards like feature-based architecture, security headers, and robust environment configurations. Let me know if you would like to expand on any specific section!
+
+
+
+# Install the generator globally
+npm install -g express-generator
+
+# Create a new Express application
+express --view=ejs myapp
+
+# Navigate to the app directory
+cd myapp
+
+# Install dependencies
+npm install
+
+# Start the app
+npm start
