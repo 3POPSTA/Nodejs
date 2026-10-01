@@ -1,5 +1,5 @@
 const express = require("express");
-// const path = require("path");
+const path = require("path");
 const app = express();
 const port = 8080;
 
@@ -10,9 +10,9 @@ app.use(express.static("public"));
 // app.use("/static",express("public"));
 
 // Using absolute path (recommended)
-// app.use("/assets",express.static(path.join(__dirname,"public")));
+app.use("/assets",express.static(path.join(__dirname,"public")));
 
-app.get("/",(request,response)=>{
+app.get("/static",(request,response)=>{
     response.send(`
         <h1>Static Files Example</h1>
         <img src="/images/logo.png" alt="Logo">
