@@ -1,0 +1,10 @@
+Example: Well-structured API Routes
+// Good API structure
+app.get('/api/products', getProducts);
+app.get('/api/products/:id', getProductById);
+app.get('/api/products/:id/reviews', getProductReviews);
+app.get('/api/users/:userId/orders', getUserOrders);
+app.post('/api/orders', createOrder);
+
+// Filtering and pagination
+app.get('/api/products?category=electronics&sort=price&limit=10&page=2');
