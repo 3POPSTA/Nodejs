@@ -1,4 +1,4 @@
-const users = [
+let users = [
     { id: 1, name: 'John Doe', email: 'john@example.com' },
     { id: 2, name: 'Jane Smith', email: 'jane@example.com' },
     { id: 3, name: 'Alice Johnson', email: 'alice@example.com' },
@@ -12,3 +12,33 @@ const users = [
     { id: 11, name: 'Ian Wright', email: 'ian@example.com' },
     { id: 12, name: 'Julia Roberts', email: 'julia@example.com' }
 ];
+
+const User = {
+    findAll: async () => users,
+    
+    findById: async (id) => {
+        return users.find(user => user.id === Number(id));
+    },
+    
+    create: async (userData) => {
+        const newUser = { id: users.length + 1, ...userData };
+        users.push(newUser);
+        return newUser;
+    },
+    
+    update: async (id, userData) => {
+        const index = users.findIndex(user => user.id === Number(id));
+        if (index === -1) return null;
+        users[index] = { ...users[index], ...userData };
+        return users[index];
+    },
+    
+    delete: async (id) => {
+        const index = users.findIndex(user => user.id === Number(id));
+        if (index === -1) return null;
+        const deletedUser = users.splice(index, 1);
+        return deletedUser[0];
+    }
+};
+
+module.exports = User;
