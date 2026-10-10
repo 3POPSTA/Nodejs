@@ -11,8 +11,8 @@ app.use(express.json());
 app.use("/api/users", userRoutes);
 
 // Handle any unmatched routes (404)
-app.all("*", (req, res, next) => {
-    next(new AppError(404, `Can't find ${req.originalUrl} on this server!`));
+app.all("*", (request, response, next) => {
+    next(new AppError(404, `Can't find ${request.originalUrl} on this server!`));
 });
 
 // Centralized error handling middleware (must be last)
