@@ -1,22 +1,22 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Simple Chat</title>
   <style>
-  body {
-    margin: 0;
-    padding: 20px;
-    font-family: Arial, sans-serif;
-  }
-  #messages {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
-    margin-bottom: 20px;
-    border: 1px solid #ddd;
-    padding: 10px;
-    height: 400px;
-    overflow-y: auto;
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+    }
+    #messages {
+      list-style-type: none;
+      margin: 0 0 20px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      height: 400px;
+      overflow-y: auto;
     }
     #messages li {
       padding: 8px 16px;
@@ -35,53 +35,102 @@
       font-size: 16px;
     }
     button {
+      margin-left: 10px;
       padding: 10px 20px;
+      border: none;
       background: #4CAF50;
       color: white;
-      border: none;
       cursor: pointer;
-      margin-left: 10px;
-      }
+    }
     button:hover {
       background: #45a049;
+    }
+    .system-message {
+      color: #666;
+      font-size: 0.9em;
+      font-style: italic;
     }
   </style>
 </head>
 <body>
   <h1>Simple Chat</h1>
-  <ul id="messages"></ul>
-  <form id="form" action="#">
-    <input id="input" autocomplete="off" placeholder="Type your message..." />
-   <button>Send</button>
-   </form>
+  <div id="username-container">
+    <label for="username-input">Username</label>
+    <input id="username-input" type="text" maxlength="32" placeholder="Enter your username">
+    <button id="set-username" type="button">Set Username</button>
+  </div>
+  <ul id="messages" aria-live="polite"></ul>
+  <form id="form">
+    <label for="input">Message</label>
+    <input id="input" type="text" maxlength="1000" autocomplete="off" placeholder="Type your message...">
+    <button type="submit">Send</button>
+  </form>
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
+    const MAX_DISPLAYED_MESSAGES = 500;
     const socket = io();
     const form = document.getElementById('form');
     const input = document.getElementById('input');
     const messages = document.getElementById('messages');
+    const usernameInput = document.getElementById('username-input');
+    const setUsernameButton = document.getElementById('set-username');
 
-    // Handle form submission
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const message = input.value.trim();
-        if (message) {
-            // Emit the message to the server
-            socket.emit('chat message', message);
-                // Clear the input
-                input.value = '';
-            }
-        });
+    function appendMessage(item) {
+      messages.append(item);
+      while (messages.childElementCount > MAX_DISPLAYED_MESSAGES) {
+        messages.firstElementChild.remove();
+      }
+      messages.scrollTop = messages.scrollHeight;
+    }
 
-        // Listen for incoming messages
-        socket.on('chat message', (msg) => {
-            const item = document.createElement('li');
-            item.textContent = msg;
-            messages.appendChild(item);
-            // Scroll to the bottom
-            messages.scrollTop = messages.scrollHeight;
-        });
-    </script>
+    function appendSystemMessage(text) {
+      const item = document.createElement('li');
+      item.className = 'system-message';
+      item.textContent = text;
+      appendMessage(item);
+    }
+
+    setUsernameButton.addEventListener('click', () => {
+      const username = usernameInput.value.trim();
+      if (username) {
+        socket.emit('set username', username);
+        usernameInput.value = '';
+      }
+    });
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const message = input.value.trim();
+      if (message) {
+        socket.emit('chat message', message);
+        input.value = '';
+      }
+    });
+
+    socket.on('chat message', (data) => {
+      const item = document.createElement('li');
+      const username = document.createElement('strong');
+      username.textContent = `${data.username}:`;
+      item.append(username, document.createTextNode(` ${data.message}`));
+      appendMessage(item);
+    });
+
+    socket.on('user joined', (data) => {
+      if (data.oldUsername === 'Anonymous') {
+        appendSystemMessage(`${data.newUsername} has joined the chat`);
+      } else {
+        appendSystemMessage(`${data.oldUsername} is now known as ${data.newUsername}`);
+      }
+    });
+
+    socket.on('user left', (data) => {
+      appendSystemMessage(`${data.username} has left the chat`);
+    });
+
+    socket.on('chat error', (data) => {
+      appendSystemMessage(data.message);
+    });
+  </script>
 </body>
 </html>

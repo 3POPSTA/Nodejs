@@ -18,12 +18,22 @@ yarn add socket.io
 
 Choose one of the following methods to include the client library:
 
-### Option 1: CDN (Quick Start)
+### Option 1: Socket.IO's served client (used by this example)
+When the Socket.IO server is running, it serves a matching client at `/socket.io/socket.io.js`:
+
 ```html
-<script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+</script>
 ```
 
-### Option 2: NPM (Recommended for Production)
+### Option 2: CDN (Quick Start)
+```html
+<script src="https://cdn.socket.io/4.8.4/socket.io.min.js"></script>
+```
+
+### Option 3: NPM (Recommended for Production)
 ```bash
 # Install the client library
 npm install socket.io-client
@@ -32,10 +42,16 @@ npm install socket.io-client
 yarn add socket.io-client
 ```
 
-### Option 3: Using ES6 Modules
+### Option 4: Using ES6 Modules
 ```javascript
 import { io } from 'socket.io-client';
 ```
+
+## Running this chat example
+
+From this folder, run `npm start` and open `http://localhost:3000`. Chat messages are limited to 1,000 characters and usernames to 32 characters. The browser displays user-provided content as text and keeps at most 500 messages in the page.
+
+Run the server/client integration tests with `npm test`.
 
 ---
 
